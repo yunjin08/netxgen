@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { useAuthStore } from '@/store/auth.store'
+import { useShallow } from 'zustand/react/shallow'
 import { Spinner } from '@/components/ui/Spinner'
 
 // Lazy imports for pages
@@ -32,12 +33,12 @@ function PageLoader() {
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitialized, isLoading, hasOrg } = useAuthStore(s => ({
+  const { isAuthenticated, isInitialized, isLoading, hasOrg } = useAuthStore(useShallow(s => ({
     isAuthenticated: !!s.user,
     isInitialized: s.isInitialized,
     isLoading: s.isLoading,
     hasOrg: !!s.profile?.organization_id,
-  }))
+  })))
 
   if (!isInitialized || isLoading) return <PageLoader />
   if (!isAuthenticated) return <Navigate to="/login" replace />
@@ -47,12 +48,12 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function AuthRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitialized, isLoading, hasOrg } = useAuthStore(s => ({
+  const { isAuthenticated, isInitialized, isLoading, hasOrg } = useAuthStore(useShallow(s => ({
     isAuthenticated: !!s.user,
     isInitialized: s.isInitialized,
     isLoading: s.isLoading,
     hasOrg: !!s.profile?.organization_id,
-  }))
+  })))
 
   if (!isInitialized || isLoading) return <PageLoader />
   if (isAuthenticated && hasOrg) return <Navigate to="/" replace />
@@ -61,11 +62,11 @@ function AuthRoute({ children }: { children: React.ReactNode }) {
 }
 
 function OnboardingRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isInitialized, isLoading } = useAuthStore(s => ({
+  const { isAuthenticated, isInitialized, isLoading } = useAuthStore(useShallow(s => ({
     isAuthenticated: !!s.user,
     isInitialized: s.isInitialized,
     isLoading: s.isLoading,
-  }))
+  })))
 
   if (!isInitialized || isLoading) return <PageLoader />
   if (!isAuthenticated) return <Navigate to="/login" replace />
