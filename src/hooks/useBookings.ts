@@ -99,7 +99,7 @@ export function useCalendarBookings(year: number, month: number) {
         .from('bookings')
         .select('id, booking_number, status, start_date, end_date, customers(full_name)')
         .eq('organization_id', orgId!)
-        .not('status', 'in', '(cancelled,no_show)')
+        .not('status', 'in', '(cancelled)')
         .lte('start_date', end)
         .gte('end_date', start)
 
