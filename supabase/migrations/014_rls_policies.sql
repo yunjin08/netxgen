@@ -48,6 +48,10 @@ ALTER TABLE audit_logs       ENABLE ROW LEVEL SECURITY;
 -- Organizations
 -- ============================================================
 
+-- Any authenticated user can create an org (needed during onboarding — no org_id yet)
+CREATE POLICY "org_insert" ON organizations
+  FOR INSERT WITH CHECK (auth.uid() IS NOT NULL);
+
 CREATE POLICY "org_select" ON organizations
   FOR SELECT USING (id = get_my_org_id());
 

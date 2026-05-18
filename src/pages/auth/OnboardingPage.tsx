@@ -203,15 +203,25 @@ export default function OnboardingPage() {
                 {...orgForm.register('name', { onChange: handleNameChange })}
                 required
               />
-              <Input
-                label="URL Slug"
-                placeholder="dela-cruz-rentals"
-                hint="Used in your public booking link"
-                error={orgForm.formState.errors.slug?.message}
-                leftElement={<span className="text-xs">rentflow.ph/</span>}
-                {...orgForm.register('slug')}
-                required
-              />
+              <div className="flex flex-col gap-1.5">
+                <label className="text-sm font-medium text-grey-20 font-body">
+                  URL Slug <span className="text-red-400 ml-0.5">*</span>
+                </label>
+                <div className="flex">
+                  <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-grey-60 bg-grey-60/60 text-grey-40 text-xs whitespace-nowrap select-none">
+                    rentflow.ph/
+                  </span>
+                  <input
+                    className="input-base rounded-l-none flex-1 min-w-0"
+                    placeholder="dela-cruz-rentals"
+                    {...orgForm.register('slug')}
+                  />
+                </div>
+                {orgForm.formState.errors.slug?.message && (
+                  <p className="text-xs text-red-400">{orgForm.formState.errors.slug.message}</p>
+                )}
+                <p className="text-xs text-grey-40">Used in your public booking link</p>
+              </div>
               <Input
                 label="Phone Number"
                 placeholder="09XXXXXXXXX"
