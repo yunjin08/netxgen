@@ -87,10 +87,18 @@ export default function OnboardingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
 
+      // Pre-generate UUIDs so we don't need .select() after each insert.
+      // PostgREST applies the SELECT policy when returning inserted rows, but
+      // during onboarding get_my_org_id() is still null → 403. Avoiding
+      // .select() sidesteps this entirely.
+      const orgId = crypto.randomUUID()
+      const branchId = crypto.randomUUID()
+
       // Create organization
-      const { data: org, error: orgError } = await supabase
+      const { error: orgError } = await supabase
         .from('organizations')
         .insert({
+          id: orgId,
           name: orgData.name,
           slug: orgData.slug,
           phone: orgData.phone || null,
@@ -108,33 +116,30 @@ export default function OnboardingPage() {
             public_booking_enabled: false,
           },
         })
-        .select()
-        .single()
 
       if (orgError) throw orgError
 
       // Create first branch
-      const { data: branch, error: branchError } = await supabase
+      const { error: branchError } = await supabase
         .from('branches')
         .insert({
-          organization_id: org.id,
+          id: branchId,
+          organization_id: orgId,
           name: branchData.branch_name,
           address: branchData.branch_address || null,
           phone: branchData.branch_phone || null,
           is_default: true,
           is_active: true,
         })
-        .select()
-        .single()
 
       if (branchError) throw branchError
 
-      // Update profile
+      // Update profile — now get_my_org_id() will return orgId going forward
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
-          organization_id: org.id,
-          branch_id: branch.id,
+          organization_id: orgId,
+          branch_id: branchId,
           role: 'owner',
         })
         .eq('id', user.id)
