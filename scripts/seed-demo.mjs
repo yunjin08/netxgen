@@ -3,8 +3,9 @@
  * Run: node scripts/seed-demo.mjs
  */
 
-const SUPABASE_URL = 'https://uxgvtbuzufnilhrlxcwu.supabase.co';
-const SERVICE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV4Z3Z0YnV6dWZuaWxocmx4Y3d1Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3OTA0NDA3MSwiZXhwIjoyMDk0NjIwMDcxfQ.cXfB0ZoXriZDpWnxeK5W4ZOw6AKTgv0KgLI6R4nfrGQ';
+const SUPABASE_URL = process.env.VITE_SUPABASE_URL || 'https://uxgvtbuzufnilhrlxcwu.supabase.co';
+const SERVICE_KEY  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SERVICE_KEY) throw new Error('Set SUPABASE_SERVICE_ROLE_KEY env var before running this script');
 
 const ORG_ID    = '5da0b76b-5144-4d6b-985b-55a478f801ac';
 const BRANCH_ID = '95b9aff2-f3f4-4ca7-9cf4-9147e5bafffd';
