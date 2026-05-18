@@ -32,3 +32,15 @@ lerna-debug.log*
 
 # TypeScript
 *.tsbuildinfo
+
+# Generated JS from TS config files
+tailwind.config.js
+tailwind.config.d.ts
+vite.config.js
+vite.config.d.ts
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Supabase temp
+supabase/.temp/
