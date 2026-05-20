@@ -18,6 +18,7 @@ const EquipmentDetailPage = lazy(() => import('@/pages/EquipmentDetailPage'))
 const CustomersPage = lazy(() => import('@/pages/CustomersPage'))
 const CustomerDetailPage = lazy(() => import('@/pages/CustomerDetailPage'))
 const PaymentsPage = lazy(() => import('@/pages/PaymentsPage'))
+const ContractsPage = lazy(() => import('@/pages/ContractsPage'))
 const ReportsPage = lazy(() => import('@/pages/ReportsPage'))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
 const PublicBookingPage = lazy(() => import('@/pages/PublicBookingPage'))
@@ -191,6 +192,14 @@ export const router = createBrowserRouter([
         element: (
           <SuspenseWrapper>
             <PaymentsPage />
+          </SuspenseWrapper>
+        ),
+      },
+      {
+        path: 'contracts',
+        element: (
+          <SuspenseWrapper>
+            <ContractsPage />
           </SuspenseWrapper>
         ),
       },

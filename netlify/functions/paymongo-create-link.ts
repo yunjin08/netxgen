@@ -66,12 +66,13 @@ export default async function handler(request: Request, context: Context): Promi
     await supabaseAdmin.from('payments').insert({
       booking_id,
       organization_id: ctx.profile.organization_id,
-      processed_by: ctx.profile.id,
-      method: 'paymongo_gcash',
+      received_by: ctx.profile.id,
+      method: 'paymongo',
       type: 'partial',
       status: 'pending',
       amount,
       paymongo_link_id: linkId,
+      checkout_url: checkoutUrl,
     })
 
     return json({ checkout_url: checkoutUrl, link_id: linkId }, 200, origin)

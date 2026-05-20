@@ -42,13 +42,17 @@ export default function PublicBookingPage() {
   }
 
   if (error || !data) {
+    const errMsg = error instanceof Error ? error.message : ''
     return (
       <div className="min-h-screen bg-grey-100 flex flex-col items-center justify-center gap-4 p-4">
         <Zap className="h-12 w-12 text-gold" />
         <h1 className="font-display text-2xl text-white">Booking Not Found</h1>
-        <p className="text-grey-40 text-center">
+        <p className="text-grey-40 text-center max-w-md">
           This booking link is invalid or has expired.
         </p>
+        {errMsg && (
+          <p className="text-xs text-grey-60 text-center max-w-md mt-2">{errMsg}</p>
+        )}
       </div>
     )
   }

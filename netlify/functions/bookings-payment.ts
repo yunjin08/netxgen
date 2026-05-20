@@ -35,7 +35,7 @@ export default async function handler(request: Request, context: Context): Promi
       .insert({
         booking_id,
         organization_id: ctx.profile.organization_id,
-        processed_by: ctx.profile.id,
+        received_by: ctx.profile.id,
         method,
         type: type ?? 'partial',
         status: 'paid',

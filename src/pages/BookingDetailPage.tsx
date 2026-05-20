@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, CreditCard, RotateCcw, Clock, Send, Link2 } from 'lucide-react'
+import { ArrowLeft, CreditCard, RotateCcw, Clock, Send, Link2, Mail } from 'lucide-react'
 import { useBooking, useUpdateBookingStatus } from '@/hooks/useBookings'
 import { useLogPayment } from '@/hooks/usePayments'
 import { Button } from '@/components/ui/Button'
@@ -70,8 +70,32 @@ export default function BookingDetailPage() {
     if (booking.public_token) {
       navigator.clipboard.writeText(`${window.location.origin}/booking/${booking.public_token}`)
       toast.success('Link copied to clipboard')
+    } else {
+      toast.error('No public link available for this booking')
     }
   }
+
+  const handleSendReceipt = async () => {
+    const customerEmail = (booking as any).customers?.email
+    if (!customerEmail) {
+      toast.error('Customer has no email address on file')
+      return
+    }
+    try {
+      await apiFetch('/api/notifications/send-email', {
+        method: 'POST',
+        body: JSON.stringify({
+          booking_id: booking.id,
+          event: 'payment_received',
+        }),
+      })
+      toast.success(`Receipt sent to ${customerEmail}`)
+    } catch (err) {
+      toast.error('Failed to send receipt', err instanceof Error ? err.message : undefined)
+    }
+  }
+
+  const isCancelled = booking.status === 'cancelled'
 
   return (
     <div>
@@ -79,17 +103,17 @@ export default function BookingDetailPage() {
         title={booking.booking_number}
         breadcrumb={[{ label: 'Bookings', href: '/bookings' }, { label: booking.booking_number }]}
         actions={
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             {booking.public_token && (
               <Button variant="secondary" size="sm" onClick={handleCopyPublicLink}>
                 <Link2 className="h-4 w-4" />
-                Share Link
+                <span className="hidden sm:inline">Share Link</span>
               </Button>
             )}
-            {balanceDue > 0 && (
+            {!isCancelled && balanceDue > 0 && (
               <Button variant="secondary" size="sm" onClick={() => setShowPayment(true)}>
                 <CreditCard className="h-4 w-4" />
-                Log Payment
+                <span className="hidden sm:inline">Log Payment</span>
               </Button>
             )}
           </div>
@@ -186,10 +210,12 @@ export default function BookingDetailPage() {
           <Card noPadding>
             <CardHeader className="px-4 pt-4 pb-3 mb-0 border-b border-grey-60">
               <CardTitle>Payments</CardTitle>
-              <Button size="sm" onClick={() => setShowPayment(true)}>
-                <CreditCard className="h-4 w-4" />
-                Log Payment
-              </Button>
+              {!isCancelled && (
+                <Button size="sm" onClick={() => setShowPayment(true)}>
+                  <CreditCard className="h-4 w-4" />
+                  Log Payment
+                </Button>
+              )}
             </CardHeader>
             {(booking as any).payments?.length ? (
               <div className="divide-y divide-grey-60/50">
@@ -223,16 +249,10 @@ export default function BookingDetailPage() {
                 <span className="text-grey-40">Subtotal</span>
                 <span className="text-white">{formatPeso(booking.subtotal)}</span>
               </div>
-              {booking.discount_amount > 0 && (
-                <div className="flex justify-between text-sm">
-                  <span className="text-grey-40">Discount</span>
-                  <span className="text-red-400">-{formatPeso(booking.discount_amount)}</span>
-                </div>
-              )}
-              {booking.late_fee_amount > 0 && (
+              {(booking as any).late_fee > 0 && (
                 <div className="flex justify-between text-sm">
                   <span className="text-grey-40">Late Fee</span>
-                  <span className="text-red-400">{formatPeso(booking.late_fee_amount)}</span>
+                  <span className="text-red-400">{formatPeso((booking as any).late_fee)}</span>
                 </div>
               )}
               <div className="border-t border-grey-60 pt-2">
@@ -253,16 +273,20 @@ export default function BookingDetailPage() {
               </div>
             </div>
 
-            {balanceDue > 0 && (
+            {!isCancelled && (
               <CardFooter className="flex-col gap-2">
-                <Button className="w-full" onClick={() => setShowPayment(true)}>
-                  <CreditCard className="h-4 w-4" />
-                  Log Payment
-                </Button>
-                <Button variant="secondary" className="w-full" onClick={handleSendPaymongoLink}>
-                  <Send className="h-4 w-4" />
-                  Send GCash Link
-                </Button>
+                {balanceDue > 0 && (
+                  <Button variant="secondary" className="w-full" onClick={handleSendPaymongoLink}>
+                    <Send className="h-4 w-4" />
+                    Send GCash Link
+                  </Button>
+                )}
+                {booking.amount_paid > 0 && (
+                  <Button variant="secondary" className="w-full" onClick={handleSendReceipt}>
+                    <Mail className="h-4 w-4" />
+                    Send Receipt to Customer
+                  </Button>
+                )}
               </CardFooter>
             )}
           </Card>
@@ -282,10 +306,9 @@ export default function BookingDetailPage() {
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="deposit">Down Payment</SelectItem>
-                  <SelectItem value="full_payment">Full Payment</SelectItem>
+                  <SelectItem value="full">Full Payment</SelectItem>
                   <SelectItem value="partial">Partial Payment</SelectItem>
                   <SelectItem value="late_fee">Late Fee</SelectItem>
-                  <SelectItem value="extension">Extension Fee</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -297,7 +320,8 @@ export default function BookingDetailPage() {
                   <SelectItem value="cash">Cash</SelectItem>
                   <SelectItem value="gcash">GCash</SelectItem>
                   <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                  <SelectItem value="card">Card</SelectItem>
+                  <SelectItem value="paymongo">PayMongo (Online)</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>

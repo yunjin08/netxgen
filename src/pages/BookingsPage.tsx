@@ -7,6 +7,7 @@ import { apiFetch } from '@/lib/api'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
 import { BookingStatusBadge } from '@/components/ui/StatusBadge'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogBody } from '@/components/ui/Dialog'
@@ -21,7 +22,7 @@ const TABS: { value: string; label: string; statuses: BookingStatus[] | undefine
   { value: 'confirmed', label: 'Confirmed', statuses: ['confirmed'] },
   { value: 'draft', label: 'Drafts', statuses: ['draft'] },
   { value: 'completed', label: 'Completed', statuses: ['completed'] },
-  { value: 'cancelled', label: 'Cancelled', statuses: ['cancelled', 'no_show'] },
+  { value: 'cancelled', label: 'Cancelled', statuses: ['cancelled'] },
   { value: 'all', label: 'All', statuses: undefined },
 ]
 
@@ -72,8 +73,22 @@ export default function BookingsPage() {
         }
       />
 
+      {/* Mobile status selector */}
+      <div className="sm:hidden mb-4">
+        <Select value={activeTab} onValueChange={setActiveTab}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {TABS.map(tab => (
+              <SelectItem key={tab.value} value={tab.value}>{tab.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-5">
+        <TabsList className="mb-5 hidden sm:flex">
           {TABS.map(tab => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}

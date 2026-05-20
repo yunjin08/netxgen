@@ -24,7 +24,6 @@ export default async function handler(request: Request, context: Context): Promi
       delivery_address,
       deposit_amount = 0,
       notes,
-      internal_notes,
     } = body
 
     if (!customer_id || !branch_id || !items?.length || !start_date || !end_date) {
@@ -91,6 +90,9 @@ export default async function handler(request: Request, context: Context): Promi
 
     const publicToken = randomBytes(16).toString('hex')
 
+    // Generate booking number
+    const bookingNumber = `BK-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
+
     // Create booking
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from('bookings')
@@ -99,21 +101,20 @@ export default async function handler(request: Request, context: Context): Promi
         branch_id,
         customer_id,
         created_by: ctx.profile.id,
+        booking_number: bookingNumber,
         status: 'confirmed',
         delivery_type,
         delivery_address: delivery_address || null,
         start_date,
         end_date,
         subtotal,
-        discount_amount: 0,
-        deposit_amount,
-        late_fee_amount: 0,
+        dp_amount: deposit_amount,
+        late_fee: 0,
         total_amount: subtotal,
         amount_paid: 0,
         notes: notes || null,
-        internal_notes: internal_notes || null,
         public_token: publicToken,
-        source: 'staff',
+        source: 'admin',
       })
       .select()
       .single()
@@ -149,11 +150,12 @@ export default async function handler(request: Request, context: Context): Promi
     // Log audit
     await supabaseAdmin.from('audit_logs').insert({
       organization_id: orgId,
-      user_id: ctx.profile.id,
-      entity_type: 'booking',
-      entity_id: booking.id,
+      actor_id: ctx.profile.id,
+      actor_role: ctx.profile.role ?? null,
+      table_name: 'bookings',
+      record_id: booking.id,
       action: 'created',
-      new_values: { status: 'confirmed', subtotal, customer_id, branch_id },
+      new_data: { status: 'confirmed', subtotal, customer_id, branch_id },
     })
 
     // Send confirmation notification (fire-and-forget)

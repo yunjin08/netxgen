@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   Clock,
   CheckCircle2,
+  CreditCard,
 } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { useAuth } from '@/hooks/useAuth'
@@ -15,7 +16,7 @@ import { BookingStatusBadge } from '@/components/ui/StatusBadge'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Button } from '@/components/ui/Button'
 import { formatPeso } from '@/utils/currency'
-import { formatPHDate } from '@/utils/dates'
+import { formatPHDate, formatPHDateTime } from '@/utils/dates'
 import { useNavigate } from 'react-router-dom'
 import type { Booking } from '@/types'
 
@@ -70,6 +71,30 @@ function useDashboardStats(orgId: string | null, branchId: string | null) {
   })
 }
 
+function useRecentPayments(orgId: string | null, branchId: string | null) {
+  return useQuery({
+    queryKey: ['recent-payments', orgId, branchId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      let query = supabase
+        .from('payments')
+        .select(`
+          id, amount, method, type, status, paid_at, created_at,
+          bookings!inner(booking_number, branch_id, customers(full_name))
+        `)
+        .eq('organization_id', orgId!)
+        .eq('status', 'paid')
+        .order('created_at', { ascending: false })
+        .limit(6)
+
+      if (branchId) query = query.eq('bookings.branch_id', branchId)
+
+      const { data } = await query
+      return (data ?? []) as any[]
+    },
+  })
+}
+
 function useRecentBookings(orgId: string | null, branchId: string | null) {
   return useQuery({
     queryKey: ['recent-bookings', orgId, branchId],
@@ -102,6 +127,7 @@ export default function DashboardPage() {
 
   const stats = useDashboardStats(orgId, branchId)
   const recent = useRecentBookings(orgId, branchId)
+  const recentPayments = useRecentPayments(orgId, branchId)
 
   const greeting = () => {
     const h = new Date().getHours()
@@ -152,51 +178,98 @@ export default function DashboardPage() {
         />
       </div>
 
-      {/* Recent bookings */}
-      <Card noPadding>
-        <CardHeader className="px-4 pt-4 mb-0 pb-3 border-b border-grey-60">
-          <CardTitle>Active & Upcoming Rentals</CardTitle>
-          <Button variant="ghost" size="sm" onClick={() => navigate('/bookings')}>
-            View all
-          </Button>
-        </CardHeader>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* Recent bookings */}
+        <Card noPadding>
+          <CardHeader className="px-4 pt-4 mb-0 pb-3 border-b border-grey-60">
+            <CardTitle>Active & Upcoming Rentals</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/bookings')}>
+              View all
+            </Button>
+          </CardHeader>
 
-        {recent.isLoading ? (
-          <div className="p-4 space-y-3">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="skeleton h-12 rounded" />
-            ))}
-          </div>
-        ) : !recent.data?.length ? (
-          <div className="flex flex-col items-center gap-2 py-12 text-center">
-            <CheckCircle2 className="h-8 w-8 text-grey-40" />
-            <p className="text-sm text-grey-40">No active rentals</p>
-          </div>
-        ) : (
-          <div className="divide-y divide-grey-60/50">
-            {recent.data.map(booking => (
-              <div
-                key={booking.id}
-                className="flex items-center justify-between px-4 py-3 hover:bg-grey-60/20 cursor-pointer transition-colors"
-                onClick={() => navigate(`/bookings/${booking.id}`)}
-              >
-                <div className="flex flex-col gap-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-white">{booking.booking_number}</span>
-                    <BookingStatusBadge status={booking.status} />
+          {recent.isLoading ? (
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton h-12 rounded" />
+              ))}
+            </div>
+          ) : !recent.data?.length ? (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <CheckCircle2 className="h-8 w-8 text-grey-40" />
+              <p className="text-sm text-grey-40">No active rentals</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-grey-60/50">
+              {recent.data.slice(0, 6).map(booking => (
+                <div
+                  key={booking.id}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-grey-60/20 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/bookings/${booking.id}`)}
+                >
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-white truncate">{booking.booking_number}</span>
+                      <BookingStatusBadge status={booking.status} />
+                    </div>
+                    <span className="text-xs text-grey-40 truncate">
+                      {(booking as any).customers?.full_name} · {formatPHDate(booking.start_date)} – {formatPHDate(booking.end_date)}
+                    </span>
                   </div>
-                  <span className="text-xs text-grey-40">
-                    {(booking as any).customers?.full_name} · {formatPHDate(booking.start_date)} – {formatPHDate(booking.end_date)}
+                  <span className="text-sm font-semibold text-gold shrink-0 ml-3">
+                    {formatPeso(booking.total_amount)}
                   </span>
                 </div>
-                <span className="text-sm font-semibold text-gold">
-                  {formatPeso(booking.total_amount)}
-                </span>
-              </div>
-            ))}
-          </div>
-        )}
-      </Card>
+              ))}
+            </div>
+          )}
+        </Card>
+
+        {/* Recent payments */}
+        <Card noPadding>
+          <CardHeader className="px-4 pt-4 mb-0 pb-3 border-b border-grey-60">
+            <CardTitle>Recent Payments</CardTitle>
+            <Button variant="ghost" size="sm" onClick={() => navigate('/payments')}>
+              View all
+            </Button>
+          </CardHeader>
+
+          {recentPayments.isLoading ? (
+            <div className="p-4 space-y-3">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="skeleton h-12 rounded" />
+              ))}
+            </div>
+          ) : !recentPayments.data?.length ? (
+            <div className="flex flex-col items-center gap-2 py-12 text-center">
+              <CreditCard className="h-8 w-8 text-grey-40" />
+              <p className="text-sm text-grey-40">No payments yet</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-grey-60/50">
+              {recentPayments.data.map(p => (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between px-4 py-3 hover:bg-grey-60/20 cursor-pointer transition-colors"
+                  onClick={() => navigate(`/payments`)}
+                >
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <span className="text-sm font-medium text-white truncate">
+                      {p.bookings?.booking_number} · {p.bookings?.customers?.full_name}
+                    </span>
+                    <span className="text-xs text-grey-40 capitalize truncate">
+                      {p.type.replace('_', ' ')} · {p.method.replace('_', ' ')} · {formatPHDateTime(p.paid_at ?? p.created_at)}
+                    </span>
+                  </div>
+                  <span className="text-sm font-bold text-green-400 shrink-0 ml-3">
+                    {formatPeso(p.amount)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   )
 }

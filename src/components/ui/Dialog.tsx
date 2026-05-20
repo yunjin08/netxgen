@@ -35,16 +35,16 @@ function DialogContent({
       <DialogOverlay />
       <RadixDialog.Content
         className={cn(
-          'fixed z-50 bg-grey-80 border border-grey-60 shadow-2xl focus:outline-none',
+          'fixed z-50 bg-grey-80 border border-grey-60 shadow-2xl focus:outline-none flex flex-col',
           side === 'right'
-            ? 'top-0 right-0 h-full w-full max-w-lg data-[state=open]:animate-slide-in-right'
-            : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg rounded-lg data-[state=open]:animate-fade-in',
+            ? 'top-0 right-0 h-full w-full sm:max-w-lg data-[state=open]:animate-slide-in-right'
+            : 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[calc(100%-1.5rem)] sm:w-full sm:max-w-lg max-h-[calc(100dvh-2rem)] sm:rounded-lg data-[state=open]:animate-fade-in',
           className
         )}
         {...props}
       >
         {children}
-        <DialogClose className="absolute top-4 right-4 text-grey-40 hover:text-white transition-colors rounded p-1 hover:bg-grey-60">
+        <DialogClose className="absolute top-4 right-4 text-grey-40 hover:text-white transition-colors rounded p-1 hover:bg-grey-60 z-10">
           <X className="h-4 w-4" />
         </DialogClose>
       </RadixDialog.Content>
@@ -55,7 +55,7 @@ function DialogContent({
 function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex flex-col gap-1.5 px-6 py-5 border-b border-grey-60', className)}
+      className={cn('flex flex-col gap-1.5 px-6 py-5 border-b border-grey-60 shrink-0', className)}
       {...props}
     />
   )
@@ -64,7 +64,7 @@ function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivEleme
 function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('flex items-center justify-end gap-3 px-6 py-4 border-t border-grey-60', className)}
+      className={cn('flex items-center justify-end gap-3 px-6 py-4 border-t border-grey-60 shrink-0', className)}
       {...props}
     />
   )

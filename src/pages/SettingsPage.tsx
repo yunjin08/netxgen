@@ -24,6 +24,7 @@ const settingsSchema = z.object({
   dp_percentage: z.coerce.number().min(0).max(100),
   late_fee_type: z.enum(['percentage', 'flat']),
   late_fee_value: z.coerce.number().min(0),
+  late_fee_period: z.enum(['hour', 'day']),
   grace_period_hours: z.coerce.number().min(0),
   sms_enabled: z.boolean(),
   email_enabled: z.boolean(),
@@ -50,6 +51,7 @@ export default function SettingsPage() {
       dp_percentage: organization?.settings?.dp_percentage ?? 50,
       late_fee_type: organization?.settings?.late_fee_type ?? 'percentage',
       late_fee_value: organization?.settings?.late_fee_value ?? 10,
+      late_fee_period: organization?.settings?.late_fee_period ?? 'day',
       grace_period_hours: organization?.settings?.grace_period_hours ?? 2,
       sms_enabled: organization?.settings?.sms_enabled ?? true,
       email_enabled: organization?.settings?.email_enabled ?? true,
@@ -141,21 +143,36 @@ export default function SettingsPage() {
                 rightElement={<span className="text-sm text-grey-40">%</span>}
                 {...settingsForm.register('dp_percentage')}
               />
-              <div className="flex flex-col gap-1.5">
-                <label className="text-sm font-medium text-grey-20">Late Fee Type</label>
-                <Select
-                  value={settingsForm.watch('late_fee_type')}
-                  onValueChange={v => settingsForm.setValue('late_fee_type', v as 'percentage' | 'flat')}
-                >
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="percentage">Percentage of rental (per day)</SelectItem>
-                    <SelectItem value="flat">Flat rate per day (₱)</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-grey-20">Late Fee Type</label>
+                  <Select
+                    value={settingsForm.watch('late_fee_type')}
+                    onValueChange={v => settingsForm.setValue('late_fee_type', v as 'percentage' | 'flat')}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="percentage">% of rental</SelectItem>
+                      <SelectItem value="flat">Flat rate (₱)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-sm font-medium text-grey-20">Charged Per</label>
+                  <Select
+                    value={settingsForm.watch('late_fee_period')}
+                    onValueChange={v => settingsForm.setValue('late_fee_period', v as 'hour' | 'day')}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hour">Per Hour</SelectItem>
+                      <SelectItem value="day">Per Day</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <Input
-                label="Late Fee Value"
+                label={`Late Fee Value (${settingsForm.watch('late_fee_type') === 'percentage' ? '%' : '₱'} per ${settingsForm.watch('late_fee_period')})`}
                 type="number"
                 min="0"
                 {...settingsForm.register('late_fee_value')}

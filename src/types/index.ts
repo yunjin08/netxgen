@@ -9,6 +9,7 @@ export interface OrgSettings {
   timezone: string
   late_fee_type: 'percentage' | 'flat'
   late_fee_value: number
+  late_fee_period: 'hour' | 'day'
   grace_period_hours: number
   dp_percentage: number
   sms_enabled: boolean
@@ -138,7 +139,6 @@ export type BookingStatus =
   | 'overdue'
   | 'completed'
   | 'cancelled'
-  | 'no_show'
 
 export type DeliveryType = 'pickup' | 'delivery'
 
@@ -154,17 +154,15 @@ export interface Booking {
   delivery_address: string | null
   start_date: string
   end_date: string
-  actual_return_date: string | null
+  actual_return: string | null
   subtotal: number
-  discount_amount: number
-  deposit_amount: number
-  late_fee_amount: number
+  dp_amount: number
+  late_fee: number
   total_amount: number
   amount_paid: number
   notes: string | null
-  internal_notes: string | null
   public_token: string | null
-  source: 'staff' | 'public_form'
+  source: 'admin' | 'public' | 'walk_in'
   created_at: string
   updated_at: string
 }
@@ -195,25 +193,23 @@ export type PaymentMethod =
   | 'cash'
   | 'gcash'
   | 'bank_transfer'
-  | 'card'
-  | 'paymongo_gcash'
-  | 'paymongo_card'
+  | 'paymongo'
+  | 'other'
 
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded'
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded'
 
 export type PaymentType =
   | 'deposit'
-  | 'full_payment'
+  | 'full'
   | 'partial'
   | 'late_fee'
-  | 'extension'
   | 'refund'
 
 export interface Payment {
   id: string
   booking_id: string
   organization_id: string
-  processed_by: string | null
+  received_by: string | null
   method: PaymentMethod
   type: PaymentType
   status: PaymentStatus
@@ -221,7 +217,7 @@ export interface Payment {
   reference_number: string | null
   paymongo_payment_id: string | null
   paymongo_link_id: string | null
-  receipt_url: string | null
+  checkout_url: string | null
   notes: string | null
   paid_at: string | null
   created_at: string
@@ -326,7 +322,6 @@ export interface BookingFormData {
   delivery_address?: string
   deposit_amount: number
   notes?: string
-  internal_notes?: string
 }
 
 export interface BookingItemFormData {

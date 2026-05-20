@@ -38,7 +38,7 @@ export function useLogPayment() {
         .insert({
           ...data,
           organization_id: profile?.organization_id,
-          processed_by: profile?.id,
+          received_by: profile?.id,
           status: 'paid',
           paid_at: new Date().toISOString(),
         })

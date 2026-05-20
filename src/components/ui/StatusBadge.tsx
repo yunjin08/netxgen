@@ -26,10 +26,6 @@ const bookingStatusConfig: Record<BookingStatus, { label: string; className: str
     label: 'Cancelled',
     className: 'bg-grey-60/20 text-grey-40 border border-grey-60/30',
   },
-  no_show: {
-    label: 'No Show',
-    className: 'bg-orange-500/20 text-orange-400 border border-orange-500/30',
-  },
 }
 
 const equipmentStatusConfig: Record<EquipmentStatus, { label: string; className: string }> = {

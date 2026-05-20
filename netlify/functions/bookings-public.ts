@@ -21,7 +21,7 @@ export default async function handler(request: Request, context: Context): Promi
       .from('bookings')
       .select(`
         id, booking_number, status, start_date, end_date,
-        total_amount, amount_paid, deposit_amount,
+        total_amount, amount_paid, dp_amount,
         delivery_type, delivery_address, notes, public_token,
         customers(id, full_name, phone, email),
         booking_items(

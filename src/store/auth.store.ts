@@ -20,6 +20,8 @@ interface AuthState {
   refreshProfile: () => Promise<void>
 }
 
+let initPromise: Promise<void> | null = null
+
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
   session: null,
@@ -31,39 +33,47 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isInitialized: false,
 
   initialize: async () => {
-    set({ isLoading: true })
+    // Guard against double-invocation (React StrictMode runs effects twice in dev,
+    // and onAuthStateChange would otherwise be subscribed twice).
+    if (initPromise) return initPromise
 
-    try {
-      const { data: { session } } = await supabase.auth.getSession()
+    initPromise = (async () => {
+      set({ isLoading: true })
 
-      if (session?.user) {
-        await loadUserData(session, set)
-      } else {
-        set({ user: null, session: null, isLoading: false, isInitialized: true })
-      }
+      try {
+        const { data: { session } } = await supabase.auth.getSession()
 
-      // Subscribe to auth changes
-      supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session) {
+        if (session?.user) {
           await loadUserData(session, set)
-        } else if (event === 'SIGNED_OUT') {
-          set({
-            user: null,
-            session: null,
-            profile: null,
-            organization: null,
-            branches: [],
-            activeBranch: null,
-            isLoading: false,
-          })
-        } else if (event === 'TOKEN_REFRESHED' && session) {
-          set({ session })
+        } else {
+          set({ user: null, session: null, isLoading: false, isInitialized: true })
         }
-      })
-    } catch (err) {
-      console.error('Auth initialization error:', err)
-      set({ isLoading: false, isInitialized: true })
-    }
+
+        // Subscribe to auth changes
+        supabase.auth.onAuthStateChange(async (event, session) => {
+          if (event === 'SIGNED_IN' && session) {
+            await loadUserData(session, set)
+          } else if (event === 'SIGNED_OUT') {
+            set({
+              user: null,
+              session: null,
+              profile: null,
+              organization: null,
+              branches: [],
+              activeBranch: null,
+              isLoading: false,
+            })
+          } else if (event === 'TOKEN_REFRESHED' && session) {
+            set({ session })
+          }
+        })
+      } catch (err) {
+        console.error('Auth initialization error:', err)
+        set({ isLoading: false, isInitialized: true })
+      }
+    })()
+
+    return initPromise
   },
 
   setActiveBranch: (branch: Branch) => {

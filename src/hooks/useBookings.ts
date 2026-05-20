@@ -97,7 +97,11 @@ export function useCalendarBookings(year: number, month: number) {
     queryFn: async () => {
       let query = supabase
         .from('bookings')
-        .select('id, booking_number, status, start_date, end_date, customers(full_name)')
+        .select(`
+          id, booking_number, status, start_date, end_date,
+          customers(full_name),
+          booking_items(quantity, equipment(id, name))
+        `)
         .eq('organization_id', orgId!)
         .not('status', 'in', '(cancelled)')
         .lte('start_date', end)
@@ -107,7 +111,10 @@ export function useCalendarBookings(year: number, month: number) {
 
       const { data, error } = await query
       if (error) throw error
-      return ((data ?? []) as unknown) as (Booking & { customers: { full_name: string } })[]
+      return ((data ?? []) as unknown) as (Booking & {
+        customers: { full_name: string }
+        booking_items: { quantity: number; equipment: { id: string; name: string } | null }[]
+      })[]
     },
   })
 }

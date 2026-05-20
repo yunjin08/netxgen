@@ -12,6 +12,8 @@ import { Textarea } from '@/components/ui/Textarea'
 import { Button } from '@/components/ui/Button'
 import { SearchInput } from '@/components/ui/SearchInput'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
+import { CustomerForm } from '@/components/customers/CustomerForm'
+import { toast } from '@/hooks/useToast'
 import { formatPeso } from '@/utils/currency'
 import { durationInDays } from '@/utils/dates'
 import { cn } from '@/utils/cn'
@@ -40,10 +42,10 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
   const [endDate, setEndDate] = useState('')
   const [depositAmount, setDepositAmount] = useState(0)
   const [notes, setNotes] = useState('')
-  const [internalNotes, setInternalNotes] = useState('')
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
+  const [showAddCustomer, setShowAddCustomer] = useState(false)
 
   const { data: equipment = [] } = useEquipment()
   const { data: customers = [] } = useCustomers(customerSearch)
@@ -108,7 +110,6 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
       delivery_address: deliveryAddress || undefined,
       deposit_amount: depositAmount,
       notes: notes || undefined,
-      internal_notes: internalNotes || undefined,
     }
 
     await onSubmit(formData)
@@ -137,7 +138,18 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
       {/* Step 1: Select Customer */}
       {step === 0 && (
         <div className="flex flex-col gap-4">
-          <h3 className="font-display text-base text-white">Select Customer</h3>
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="font-display text-base text-white">Select Customer</h3>
+            <Button
+              type="button"
+              size="sm"
+              variant="secondary"
+              onClick={() => setShowAddCustomer(true)}
+            >
+              <Plus className="h-3.5 w-3.5" />
+              Add Customer
+            </Button>
+          </div>
           <SearchInput
             value={customerSearch}
             onChange={setCustomerSearch}
@@ -164,7 +176,13 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
               </button>
             ))}
             {!customers.length && (
-              <p className="text-sm text-grey-40 text-center py-4">No customers found</p>
+              <div className="text-center py-4">
+                <p className="text-sm text-grey-40 mb-2">No customers found</p>
+                <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddCustomer(true)}>
+                  <Plus className="h-3.5 w-3.5" />
+                  Add New Customer
+                </Button>
+              </div>
             )}
           </div>
           <div className="flex justify-between pt-2">
@@ -173,6 +191,37 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
               Next <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
+
+          {/* Inline add-customer panel */}
+          {showAddCustomer && (
+            <div className="border-t border-grey-60 pt-4">
+              <h4 className="font-display text-sm text-white mb-3">New Customer</h4>
+              <CustomerForm
+                onSubmit={async data => {
+                  try {
+                    const newCustomer = await createCustomer.mutateAsync({
+                      ...data,
+                      organization_id: profile?.organization_id!,
+                      email: data.email || null,
+                      address: data.address || null,
+                      id_type: data.id_type || null,
+                      id_number: data.id_number || null,
+                      id_image_url: null,
+                      notes: data.notes || null,
+                      is_blacklisted: false,
+                    } as any)
+                    setSelectedCustomer(newCustomer)
+                    setShowAddCustomer(false)
+                    setCustomerSearch('')
+                  } catch (err) {
+                    toast.error('Failed to add customer', err instanceof Error ? err.message : undefined)
+                  }
+                }}
+                onCancel={() => setShowAddCustomer(false)}
+                isLoading={createCustomer.isPending}
+              />
+            </div>
+          )}
         </div>
       )}
 
@@ -375,13 +424,6 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
             placeholder="Rental terms, special instructions..."
             value={notes}
             onChange={e => setNotes(e.target.value)}
-          />
-
-          <Textarea
-            label="Internal Notes"
-            placeholder="Internal staff notes (not visible to customer)"
-            value={internalNotes}
-            onChange={e => setInternalNotes(e.target.value)}
           />
 
           <div className="bg-grey-100 rounded-lg p-3">

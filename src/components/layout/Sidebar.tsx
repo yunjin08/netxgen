@@ -9,6 +9,7 @@ import {
   BarChart3,
   Settings,
   Zap,
+  FileText,
 } from 'lucide-react'
 import { cn } from '@/utils/cn'
 import { useAuth } from '@/hooks/useAuth'
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/calendar', icon: CalendarDays, label: 'Calendar' },
   { to: '/equipment', icon: Package, label: 'Equipment' },
   { to: '/customers', icon: Users, label: 'Customers' },
+  { to: '/contracts', icon: FileText, label: 'Contracts' },
   { to: '/payments', icon: CreditCard, label: 'Payments' },
 ]
 
