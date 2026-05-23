@@ -2,13 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { useCalendarBookings } from '@/hooks/useBookings'
+import { useEquipment } from '@/hooks/useEquipment'
 import { Button } from '@/components/ui/Button'
 import { PageHeader } from '@/components/ui/PageHeader'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/Select'
-import { formatPHDate } from '@/utils/dates'
 import { cn } from '@/utils/cn'
-
-type CalendarView = 'customer' | 'equipment'
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -22,9 +20,10 @@ export default function CalendarPage() {
   const now = new Date()
   const [year, setYear] = useState(now.getFullYear())
   const [month, setMonth] = useState(now.getMonth() + 1)
-  const [view, setView] = useState<CalendarView>('customer')
+  const [equipmentFilter, setEquipmentFilter] = useState('all')
 
-  const { data: bookings = [], isLoading } = useCalendarBookings(year, month)
+  const { data: bookings = [] } = useCalendarBookings(year, month)
+  const { data: equipmentList = [] } = useEquipment()
 
   const prevMonth = () => {
     if (month === 1) { setMonth(12); setYear(y => y - 1) }
@@ -35,6 +34,15 @@ export default function CalendarPage() {
     else setMonth(m => m + 1)
   }
 
+  // Filter bookings by selected equipment
+  const filteredBookings = equipmentFilter === 'all'
+    ? bookings
+    : bookings.filter(b =>
+        (b as any).booking_items?.some(
+          (item: any) => item.equipment?.id === equipmentFilter
+        )
+      )
+
   // Build calendar grid
   const firstDay = new Date(year, month - 1, 1).getDay()
   const daysInMonth = new Date(year, month, 0).getDate()
@@ -42,13 +50,11 @@ export default function CalendarPage() {
     ...Array(firstDay).fill(null),
     ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
   ]
-
-  // Pad to complete weeks
   while (calendarDays.length % 7 !== 0) calendarDays.push(null)
 
   const getBookingsForDay = (day: number) => {
     const date = new Date(year, month - 1, day)
-    return bookings.filter(b => {
+    return filteredBookings.filter(b => {
       const start = new Date(b.start_date)
       const end = new Date(b.end_date)
       return date >= new Date(start.getFullYear(), start.getMonth(), start.getDate()) &&
@@ -64,33 +70,29 @@ export default function CalendarPage() {
     completed: 'bg-grey-20/20 text-grey-40',
   }
 
-  const renderBookingLabel = (b: any, idx: number) => {
-    if (view === 'equipment') {
-      const items = b.booking_items ?? []
-      if (!items.length) return b.booking_number
-      const item = items[0]
-      const eqName = item.equipment?.name ?? 'Equipment'
-      const unit = items.length > 1 ? ` +${items.length - 1}` : ''
-      const qty = item.quantity > 1 ? ` ×${item.quantity}` : ''
-      return `${eqName}${qty}${unit}`
-    }
-    return b.customers?.full_name ?? b.booking_number
-  }
+  const selectedEquipment = equipmentList.find(e => e.id === equipmentFilter)
 
   return (
     <div>
       <PageHeader
         title="Calendar"
-        description="Monthly overview of all bookings"
-        breadcrumb={[{ label: 'Calendar' }]}
+        description={
+          selectedEquipment
+            ? `Showing bookings for ${selectedEquipment.name}`
+            : 'Monthly overview of all bookings'
+        }
         actions={
-          <Select value={view} onValueChange={v => setView(v as CalendarView)}>
-            <SelectTrigger className="w-40">
-              <SelectValue />
+          <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
+            <SelectTrigger className="w-52">
+              <SelectValue placeholder="All Equipment" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="customer">View by Customer</SelectItem>
-              <SelectItem value="equipment">View by Equipment</SelectItem>
+              <SelectItem value="all">All Equipment</SelectItem>
+              {equipmentList.map(eq => (
+                <SelectItem key={eq.id} value={eq.id}>
+                  {eq.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         }
@@ -142,7 +144,7 @@ export default function CalendarPage() {
                     {day}
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    {dayBookings.slice(0, 3).map((b, idx) => (
+                    {dayBookings.slice(0, 3).map(b => (
                       <button
                         key={b.id}
                         className={cn(
@@ -152,7 +154,7 @@ export default function CalendarPage() {
                         onClick={() => navigate(`/bookings/${b.id}`)}
                         title={`${b.booking_number} · ${(b as any).customers?.full_name ?? ''}`}
                       >
-                        {renderBookingLabel(b, idx)}
+                        {(b as any).customers?.full_name ?? b.booking_number}
                       </button>
                     ))}
                     {dayBookings.length > 3 && (
