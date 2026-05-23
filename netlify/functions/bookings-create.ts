@@ -93,6 +93,11 @@ export default async function handler(request: Request, context: Context): Promi
     // Generate booking number
     const bookingNumber = `BK-${new Date().getFullYear()}-${Date.now().toString().slice(-6)}`
 
+    // Date-aware status: active if rental starts today or earlier, confirmed if future
+    const today = new Date(); today.setHours(0, 0, 0, 0)
+    const startsToday = new Date(start_date) <= today
+    const initialStatus = startsToday ? 'active' : 'confirmed'
+
     // Create booking
     const { data: booking, error: bookingError } = await supabaseAdmin
       .from('bookings')
@@ -102,7 +107,7 @@ export default async function handler(request: Request, context: Context): Promi
         customer_id,
         created_by: ctx.profile.id,
         booking_number: bookingNumber,
-        status: 'confirmed',
+        status: initialStatus,
         delivery_type,
         delivery_address: delivery_address || null,
         start_date,
@@ -156,7 +161,7 @@ export default async function handler(request: Request, context: Context): Promi
         table_name: 'bookings',
         record_id: booking.id,
         action: 'created',
-        new_data: { status: 'confirmed', subtotal, customer_id, branch_id },
+        new_data: { status: initialStatus, subtotal, customer_id, branch_id },
       })
     } catch {
       console.warn('audit_logs insert failed, skipping')

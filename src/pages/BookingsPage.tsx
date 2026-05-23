@@ -39,7 +39,7 @@ export default function BookingsPage() {
   const handleCreate = async (data: BookingFormData) => {
     setIsCreating(true)
     try {
-      await apiFetch('/api/bookings/create', {
+      const res = await apiFetch<{ booking: { id: string } }>('/api/bookings/create', {
         method: 'POST',
         body: JSON.stringify({
           ...data,
@@ -51,7 +51,7 @@ export default function BookingsPage() {
       })
       toast.success('Booking created!')
       setShowCreate(false)
-      navigate('/bookings')
+      navigate(`/bookings/${res.booking.id}`)
     } catch (err) {
       toast.error('Failed to create booking', err instanceof Error ? err.message : undefined)
     } finally {
