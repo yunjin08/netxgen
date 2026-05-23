@@ -1,3 +1,4 @@
+import { useRef } from 'react'
 import { Outlet, useNavigation } from 'react-router-dom'
 import { Sidebar } from './Sidebar'
 import { MobileNav } from './MobileNav'
@@ -5,7 +6,10 @@ import { TopBar } from './TopBar'
 
 export default function AppShell() {
   const navigation = useNavigation()
-  const isNavigating = navigation.state === 'loading'
+  // Only show loading indicator after the first idle — skip the initial page load
+  const hasBeenIdle = useRef(false)
+  if (navigation.state === 'idle') hasBeenIdle.current = true
+  const isNavigating = hasBeenIdle.current && navigation.state === 'loading'
 
   return (
     <div className="flex h-screen bg-grey-100 overflow-hidden">
