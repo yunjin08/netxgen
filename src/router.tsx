@@ -21,7 +21,6 @@ const PaymentsPage = lazy(() => import('@/pages/PaymentsPage'))
 const ContractsPage = lazy(() => import('@/pages/ContractsPage'))
 const ReportsPage = lazy(() => import('@/pages/ReportsPage'))
 const SettingsPage = lazy(() => import('@/pages/SettingsPage'))
-const ContractsPage = lazy(() => import('@/pages/ContractsPage'))
 const PublicBookingPage = lazy(() => import('@/pages/PublicBookingPage'))
 const NotFoundPage = lazy(() => import('@/pages/NotFoundPage'))
 const AppShell = lazy(() => import('@/components/layout/AppShell'))
@@ -217,14 +216,6 @@ export const router = createBrowserRouter([
         element: (
           <SuspenseWrapper>
             <SettingsPage />
-          </SuspenseWrapper>
-        ),
-      },
-      {
-        path: 'contracts',
-        element: (
-          <SuspenseWrapper>
-            <ContractsPage />
           </SuspenseWrapper>
         ),
       },
