@@ -76,14 +76,20 @@ export default function CalendarPage() {
     <div>
       <PageHeader
         title="Calendar"
-        description={
-          selectedEquipment
-            ? `Showing bookings for ${selectedEquipment.name}`
-            : 'Monthly overview of all bookings'
-        }
-        actions={
+        description="Monthly overview of all bookings"
+      />
+
+      {/* Month navigation + equipment filter */}
+      <div className="flex items-center justify-between mb-5">
+        <Button variant="secondary" size="sm" onClick={prevMonth}>
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <h2 className="font-display text-lg sm:text-xl text-white">
+          {MONTHS[month - 1]} {year}
+        </h2>
+        <div className="flex items-center gap-2">
           <Select value={equipmentFilter} onValueChange={setEquipmentFilter}>
-            <SelectTrigger className="w-52">
+            <SelectTrigger className="h-8 text-xs w-40 border-grey-60 bg-grey-80">
               <SelectValue placeholder="All Equipment" />
             </SelectTrigger>
             <SelectContent>
@@ -95,20 +101,10 @@ export default function CalendarPage() {
               ))}
             </SelectContent>
           </Select>
-        }
-      />
-
-      {/* Month navigation */}
-      <div className="flex items-center justify-between mb-5">
-        <Button variant="secondary" size="sm" onClick={prevMonth}>
-          <ChevronLeft className="h-4 w-4" />
-        </Button>
-        <h2 className="font-display text-lg sm:text-xl text-white">
-          {MONTHS[month - 1]} {year}
-        </h2>
-        <Button variant="secondary" size="sm" onClick={nextMonth}>
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+          <Button variant="secondary" size="sm" onClick={nextMonth}>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Day headers */}
