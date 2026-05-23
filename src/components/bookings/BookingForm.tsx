@@ -45,7 +45,9 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
   const [deliveryType, setDeliveryType] = useState<'pickup' | 'delivery'>('pickup')
   const [deliveryAddress, setDeliveryAddress] = useState('')
   const [availabilityWarning, setAvailabilityWarning] = useState<string | null>(null)
-  const [showAddCustomer, setShowAddCustomer] = useState(false)
+  const [newCustomerName, setNewCustomerName] = useState('')
+  const [newCustomerPhone, setNewCustomerPhone] = useState('')
+  const [newCustomerEmail, setNewCustomerEmail] = useState('')
 
   const { data: equipment = [] } = useEquipment()
   const { data: customers = [] } = useCustomers(customerSearch)
@@ -91,6 +93,20 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
 
     checkAvailability()
   }, [startDate, endDate, selectedItems])
+
+  const handleCreateCustomer = async () => {
+    const newCust = await createCustomer.mutateAsync({
+      full_name: newCustomerName,
+      phone: newCustomerPhone,
+      email: newCustomerEmail || undefined,
+      organization_id: profile?.organization_id!,
+      branch_id: activeBranch?.id!,
+    })
+    setSelectedCustomer(newCust)
+    setNewCustomerName('')
+    setNewCustomerPhone('')
+    setNewCustomerEmail('')
+  }
 
   const handleFinalSubmit = async () => {
     if (!selectedCustomer) return
@@ -175,14 +191,40 @@ export function BookingForm({ onSubmit, onCancel, isLoading, defaultCustomerId }
                 {selectedCustomer?.id === c.id && <Check className="h-4 w-4 text-gold" />}
               </button>
             ))}
-            {!customers.length && (
-              <div className="text-center py-4">
-                <p className="text-sm text-grey-40 mb-2">No customers found</p>
-                <Button type="button" size="sm" variant="secondary" onClick={() => setShowAddCustomer(true)}>
-                  <Plus className="h-3.5 w-3.5" />
-                  Add New Customer
+            {!customers.length && customerSearch && (
+              <div className="border border-grey-60 rounded-lg p-4 flex flex-col gap-3">
+                <p className="text-sm text-gold font-medium">Add new customer</p>
+                <Input
+                  label="Full Name"
+                  placeholder="Juan dela Cruz"
+                  value={newCustomerName}
+                  onChange={e => setNewCustomerName(e.target.value)}
+                />
+                <Input
+                  label="Phone"
+                  placeholder="+63 9XX XXX XXXX"
+                  value={newCustomerPhone}
+                  onChange={e => setNewCustomerPhone(e.target.value)}
+                />
+                <Input
+                  label="Email (optional)"
+                  type="email"
+                  placeholder="juan@email.com"
+                  value={newCustomerEmail}
+                  onChange={e => setNewCustomerEmail(e.target.value)}
+                />
+                <Button
+                  size="sm"
+                  onClick={handleCreateCustomer}
+                  isLoading={createCustomer.isPending}
+                  disabled={!newCustomerName || !newCustomerPhone}
+                >
+                  <Plus className="h-3.5 w-3.5" /> Create Customer
                 </Button>
               </div>
+            )}
+            {!customers.length && !customerSearch && (
+              <p className="text-sm text-grey-40 text-center py-4">No customers found</p>
             )}
           </div>
           <div className="flex justify-between pt-2">

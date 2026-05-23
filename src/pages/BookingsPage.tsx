@@ -64,7 +64,6 @@ export default function BookingsPage() {
       <PageHeader
         title="Bookings"
         description="Manage all your rental bookings"
-        breadcrumb={[{ label: 'Bookings' }]}
         actions={
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
@@ -88,13 +87,15 @@ export default function BookingsPage() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="mb-5 hidden sm:flex">
+        <div className="overflow-x-auto mb-5">
+        <TabsList>
           {TABS.map(tab => (
             <TabsTrigger key={tab.value} value={tab.value}>
               {tab.label}
             </TabsTrigger>
           ))}
         </TabsList>
+        </div>
 
         {TABS.map(tab => (
           <TabsContent key={tab.value} value={tab.value}>

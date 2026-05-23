@@ -12,6 +12,7 @@ export function useBookings(filters?: { status?: BookingStatus | BookingStatus[]
   return useQuery({
     queryKey: ['bookings', orgId, branchId, filters],
     enabled: !!orgId,
+    staleTime: 30 * 1000,
     queryFn: async () => {
       let query = supabase
         .from('bookings')

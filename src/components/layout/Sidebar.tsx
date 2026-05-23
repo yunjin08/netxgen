@@ -24,6 +24,7 @@ const navItems = [
   { to: '/customers', icon: Users, label: 'Customers' },
   { to: '/contracts', icon: FileText, label: 'Contracts' },
   { to: '/payments', icon: CreditCard, label: 'Payments' },
+  { to: '/contracts', icon: FileText, label: 'Contracts' },
 ]
 
 const ownerItems = [

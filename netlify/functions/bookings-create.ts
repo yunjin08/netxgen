@@ -147,16 +147,20 @@ export default async function handler(request: Request, context: Context): Promi
       throw itemsError
     }
 
-    // Log audit
-    await supabaseAdmin.from('audit_logs').insert({
-      organization_id: orgId,
-      actor_id: ctx.profile.id,
-      actor_role: ctx.profile.role ?? null,
-      table_name: 'bookings',
-      record_id: booking.id,
-      action: 'created',
-      new_data: { status: 'confirmed', subtotal, customer_id, branch_id },
-    })
+    // Log audit (non-critical, don't fail booking if this errors)
+    try {
+      await supabaseAdmin.from('audit_logs').insert({
+        organization_id: orgId,
+        actor_id: ctx.profile.id,
+        actor_role: ctx.profile.role ?? null,
+        table_name: 'bookings',
+        record_id: booking.id,
+        action: 'created',
+        new_data: { status: 'confirmed', subtotal, customer_id, branch_id },
+      })
+    } catch {
+      console.warn('audit_logs insert failed, skipping')
+    }
 
     // Send confirmation notification (fire-and-forget)
     fetch(`${process.env.URL}/.netlify/functions/send-sms`, {

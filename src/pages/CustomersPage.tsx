@@ -28,7 +28,6 @@ export default function CustomersPage() {
       <PageHeader
         title="Customers"
         description="Manage your customer database"
-        breadcrumb={[{ label: 'Customers' }]}
         actions={
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />

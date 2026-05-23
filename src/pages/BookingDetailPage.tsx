@@ -67,12 +67,12 @@ export default function BookingDetailPage() {
   }
 
   const handleCopyPublicLink = () => {
-    if (booking.public_token) {
-      navigator.clipboard.writeText(`${window.location.origin}/booking/${booking.public_token}`)
-      toast.success('Link copied to clipboard')
-    } else {
+    if (!booking.public_token) {
       toast.error('No public link available for this booking')
+      return
     }
+    navigator.clipboard.writeText(`${window.location.origin}/booking/${booking.public_token}`)
+    toast.success('Link copied to clipboard')
   }
 
   const handleSendReceipt = async () => {
@@ -82,12 +82,9 @@ export default function BookingDetailPage() {
       return
     }
     try {
-      await apiFetch('/api/notifications/send-email', {
+      await apiFetch('/api/payments/send-receipt', {
         method: 'POST',
-        body: JSON.stringify({
-          booking_id: booking.id,
-          event: 'payment_received',
-        }),
+        body: JSON.stringify({ booking_id: booking.id }),
       })
       toast.success(`Receipt sent to ${customerEmail}`)
     } catch (err) {
@@ -104,12 +101,10 @@ export default function BookingDetailPage() {
         breadcrumb={[{ label: 'Bookings', href: '/bookings' }, { label: booking.booking_number }]}
         actions={
           <div className="flex flex-wrap gap-2">
-            {booking.public_token && (
-              <Button variant="secondary" size="sm" onClick={handleCopyPublicLink}>
+            <Button variant="secondary" size="sm" onClick={handleCopyPublicLink}>
                 <Link2 className="h-4 w-4" />
                 <span className="hidden sm:inline">Share Link</span>
               </Button>
-            )}
             {!isCancelled && balanceDue > 0 && (
               <Button variant="secondary" size="sm" onClick={() => setShowPayment(true)}>
                 <CreditCard className="h-4 w-4" />

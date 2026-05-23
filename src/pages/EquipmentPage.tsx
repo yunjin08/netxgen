@@ -70,7 +70,6 @@ export default function EquipmentPage() {
       <PageHeader
         title="Equipment"
         description="Manage your rental inventory"
-        breadcrumb={[{ label: 'Equipment' }]}
         actions={
           <Button onClick={() => setShowCreate(true)}>
             <Plus className="h-4 w-4" />
