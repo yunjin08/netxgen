@@ -173,11 +173,10 @@ export interface BookingItem {
   equipment_id: string
   pricing_tier_id: string | null
   quantity: number
+  unit: 'hour' | 'day' | 'week' | 'month'
   unit_price: number
-  duration_units: number
+  units_count: number
   subtotal: number
-  returned_qty: number
-  condition_notes: string | null
   created_at: string
 }
 

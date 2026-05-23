@@ -134,10 +134,10 @@ export default async function handler(request: Request, context: Context): Promi
           equipment_id: item.equipment_id,
           pricing_tier_id: item.pricing_tier_id || null,
           quantity: item.quantity,
+          unit: 'day',
           unit_price: item.unit_price,
-          duration_units: days,
-          subtotal: item.unit_price * item.quantity * days,
-          returned_qty: 0,
+          units_count: item.duration_units ?? days,
+          subtotal: item.unit_price * item.quantity * (item.duration_units ?? days),
         }))
       )
 

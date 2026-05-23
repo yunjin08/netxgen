@@ -185,7 +185,7 @@ function ContractDocument({ booking, orgName, orgPhone, orgAddress }: ContractDo
               <td className="py-1.5 px-2">{item.equipment?.name}</td>
               <td className="text-right py-1.5 px-2">{item.quantity}</td>
               <td className="text-right py-1.5 px-2">{formatPeso(item.unit_price)}</td>
-              <td className="text-right py-1.5 px-2">{item.duration_units}</td>
+              <td className="text-right py-1.5 px-2">{item.units_count}</td>
               <td className="text-right py-1.5 px-2">{formatPeso(item.subtotal)}</td>
             </tr>
           ))}

@@ -192,7 +192,7 @@ export default function BookingDetailPage() {
                   <div>
                     <p className="text-sm text-white">{item.equipment?.name}</p>
                     <p className="text-xs text-grey-40">
-                      {item.quantity} × {formatPeso(item.unit_price)} × {item.duration_units} days
+                      {item.quantity} × {formatPeso(item.unit_price)} × {item.units_count} days
                     </p>
                   </div>
                   <span className="text-sm font-bold text-gold">{formatPeso(item.subtotal)}</span>
